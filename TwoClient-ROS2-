@@ -1,0 +1,36 @@
+import rclpy
+from rclpy.node import Node
+from my_robot_interfaces.srv import Polygon
+
+
+class Sides(Node):
+    def __init__(self, node_name, *, context = None, cli_args = None, namespace = None, use_global_arguments = True, enable_rosout = True, start_parameter_services = True, parameter_overrides = None, allow_undeclared_parameters = False, automatically_declare_parameters_from_overrides = False, enable_logger_service = False):
+        super().__init__(node_name, context=context, cli_args=cli_args, namespace=namespace, use_global_arguments=use_global_arguments, enable_rosout=enable_rosout, start_parameter_services=start_parameter_services, parameter_overrides=parameter_overrides, allow_undeclared_parameters=allow_undeclared_parameters, automatically_declare_parameters_from_overrides=automatically_declare_parameters_from_overrides, enable_logger_service=enable_logger_service)
+        self.clients_ = self.create_client(Polygon, "Sender_client")
+
+    def send_request(self, value_sides, value_length):
+        request = Polygon.Request()
+        request.sides = value_sides
+        request.lenght = value_length
+
+        future = self.clients_.call_async(request)
+        future.add_done_callback(self.callback_response)
+
+
+    def callback_response(self, future):
+        try:
+            response = future.result()
+            self.get_logger().info("Success flag: " + str(response.success))
+        except Exception as e:
+            self.get_logger().error("Service call failed: " + str(e))
+
+def main(args=None):
+    rclpy.init()
+    node = Sides("node_name_data_sender")
+    node.send_request(3,3)
+    rclpy.spin(node)
+    rclpy.shutdown()
+
+
+if __name__ == "__main__":
+    main()
